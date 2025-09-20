@@ -191,4 +191,15 @@ app.post('/api/students/complete-drill', authMiddleware, async (req, res) => {
     }
 });
 
+const path = require('path');
+
+// Serve static frontend files
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Catch-all route to serve index.html for any unknown route
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
