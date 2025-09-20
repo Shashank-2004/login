@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DisasterDock - Sign Up</title>
+  <title>DisasterDock - Login</title>
   <style>
     body {
       margin: 0;
@@ -102,73 +102,54 @@
 </head>
 <body>
   <div class="card">
-    <h2>Create Account</h2>
-    <form id="signupForm">
-      <input type="text" name="name" placeholder="Full Name" required>
+    <h2>Login</h2>
+    <form id="loginForm">
       <input type="email" name="email" placeholder="Email" required>
       <input type="password" name="password" placeholder="Password" required>
-      <input type="text" name="schoolId" placeholder="School Code" required>
       <select name="role" required>
         <option value="">Select Role</option>
         <option value="student">Student</option>
         <option value="admin">Administrator</option>
       </select>
-      <button type="submit">Sign Up</button>
+      <button type="submit">Login</button>
     </form>
 
-    <div class="social-btn" onclick="googleSignup()">
+    <div class="social-btn" onclick="googleLogin()">
       <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Logo">
-      Sign up with Google
+      Login with Google
     </div>
 
     <div class="switch">
-      Already have an account? <a href="index.html">Login</a>
+      Don’t have an account? <a href="signup.html">Sign Up</a>
     </div>
   </div>
 
-<<script>
-document.getElementById("signupForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+<script>
+ document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const formData = Object.fromEntries(new FormData(e.target).entries());
+  const res = await fetch("https://login-relt.onrender.com/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(formData)
+  });
+  const data = await res.json();
 
-    const formData = Object.fromEntries(new FormData(e.target).entries());
+  if (res.ok) {
+    // Save JWT token in localStorage for later use
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("role", data.role);
 
-    // Simple frontend validation
-    if (!formData.role) {
-        alert("Please select a role");
-        return;
+    // Redirect based on role
+    if (data.role === "admin") {
+      window.location.href = "admin-dashboard.html";
+    } else if (data.role === "student") {
+      window.location.href = "student-dashboard.html";
     }
-    if (!formData.schoolId) {
-        alert("Please enter School Code");
-        return;
-    }
-
-    try {
-        const res = await fetch("https://login-relt.onrender.com/api/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(formData)
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-            // Backend returned error
-            alert(data.message || "Signup failed");
-            return;
-        }
-
-        alert("Signup successful! You can now login.");
-        window.location.href = "login.html"; // redirect to login
-    } catch (err) {
-        console.error("Signup error:", err);
-        alert("Could not connect to server. Try again later.");
-    }
+  } else {
+    alert(data.message); // show error message
+  }
 });
-
-function googleSignup() {
-    alert("Google OAuth sign-up will be implemented here!");
-}
 </script>
-
 </body>
 </html>

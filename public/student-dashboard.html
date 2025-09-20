@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!token) { window.location.href = 'login.html'; return; }
 
     try {
-        const res = await fetch('http://localhost:5000/api/me', {
+        const res = await fetch('https://login-relt.onrender.com', {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` }
         });
