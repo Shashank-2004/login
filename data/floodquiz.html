@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flood Safety Quiz</title>
+<style>
+body { 
+    margin: 0; 
+    font-family: Arial, sans-serif; 
+    background: #fbecec; 
+    display: flex; 
+    justify-content: center; 
+    align-items: flex-start; 
+    min-height: 100vh; 
+    padding: 40px 15px; 
+}
+.quiz-container { 
+    background: #fff; 
+    border-radius: 15px; 
+    padding: 30px; 
+    max-width: 700px; 
+    width: 100%; 
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2); 
+    position: relative; /* For positioning the message box */
+}
+h1 { 
+    text-align: center; 
+    margin-bottom: 20px; 
+    color: #1586c6; 
+}
+#progress { 
+    text-align: center; 
+    font-weight: bold; 
+    margin-bottom: 15px; 
+    color: #1586c6; 
+}
+.progress-bar { 
+    width: 100%; 
+    height: 8px; 
+    background: #eee; 
+    border-radius: 5px; 
+    margin-bottom: 20px; 
+    overflow: hidden; 
+}
+.progress-fill { 
+    height: 100%; 
+    background: #1586c6; 
+    width: 0%; 
+    transition: width 0.3s ease; 
+}
+.question { 
+    font-size: 20px; 
+    margin-bottom: 20px; 
+    text-align: center; 
+}
+.options button { 
+    display: block; 
+    width: 100%; 
+    margin: 10px 0; 
+    padding: 12px; 
+    font-size: 16px; 
+    border: none; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    background:#0277bd; 
+    color: #fff; 
+    transition: background 0.3s; 
+}
+.options button:hover { 
+    background: #01579b; 
+}
+.options button.correct { 
+    background: #2e7d32 !important; 
+}
+.options button.wrong { 
+    background: #c62828 !important; 
+    opacity: 0.8; 
+}
+#next-btn { 
+    margin-top: 20px; 
+    padding: 12px 20px; 
+    font-size: 16px; 
+    background: #0277bd; 
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    display: none; 
+}
+#next-btn:hover { 
+    background: #01579b; 
+}
+#result { 
+    display: none; 
+    margin-top: 20px; 
+    font-size: 18px; 
+    text-align: center; 
+    font-weight: bold; 
+    color: #444; 
+}
+/* Styles for the custom message box */
+.message-box {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    text-align: center;
+}
+.message-box button {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background: #0277bd;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+</style>
+</head>
+<body>
+<div class="quiz-container">
+<h1>🌊 Flood Safety Quiz</h1>
+<div id="progress">Question 1 of 5</div>
+<div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+<div class="question" id="question">Question text</div>
+<div class="options" id="options"></div>
+<button id="next-btn">Next</button>
+<div id="result"></div>
+</div>
+
+<script>
+const quizData = [
+    { question: "What should you do first when a flood warning is issued?", options: ["Ignore it","Move to higher ground","Go swimming","Stay in the basement"], answer: "Move to higher ground", tip: "⛰ Always move to higher ground immediately." },
+    { question: "What should you avoid during floods?", options: ["Walking through moving water","Listening to updates","Carrying an emergency kit","Staying alert"], answer: "Walking through moving water", tip: "💧 Just 6 inches of moving water can knock you down!" },
+    { question: "What should be in your flood emergency kit?", options: ["Food & water","Flashlight","First aid kit","All of the above"], answer: "All of the above", tip: "🎒 Include essentials: food, water, flashlight, first aid, docs." },
+    { question: "Why should you avoid driving through flooded roads?", options: ["The road might be damaged","Cars can be swept away","Water can stall your engine","All of the above"], answer: "All of the above", tip: "🚗 Turn around, don't drown!" },
+    { question: "If trapped in a building during a flood, what should you do?", options: ["Move to the highest floor or roof","Hide in the basement","Swim away","Wait silently"], answer: "Move to the highest floor or roof", tip: "🏠 Move up and call for help if trapped." }
+];
+
+let currentQuestion = 0;
+let score = 0;
+
+const questionEl = document.getElementById("question");
+const optionsEl = document.getElementById("options");
+const nextBtn = document.getElementById("next-btn");
+const resultEl = document.getElementById("result");
+const progressEl = document.getElementById("progress");
+const progressFill = document.getElementById("progress-fill");
+
+// Function to show a custom message box instead of an alert
+function showMessageBox(message) {
+    const messageBox = document.createElement('div');
+    messageBox.className = 'message-box';
+    messageBox.innerHTML = `
+        <p>${message}</p>
+        <button onclick="document.body.removeChild(this.parentElement)">OK</button>
+    `;
+    document.body.appendChild(messageBox);
+}
+
+function loadQuestion() {
+    const q = quizData[currentQuestion];
+    questionEl.textContent = q.question;
+    optionsEl.innerHTML = "";
+    q.options.forEach(option => {
+        const btn = document.createElement("button");
+        btn.textContent = option;
+        btn.onclick = () => checkAnswer(btn, option);
+        optionsEl.appendChild(btn);
+    });
+    progressEl.textContent = `Question ${currentQuestion+1} of ${quizData.length}`;
+    progressFill.style.width = `${(currentQuestion/quizData.length)*100}%`;
+}
+
+function checkAnswer(button, selected) {
+    const q = quizData[currentQuestion];
+    const buttons = optionsEl.querySelectorAll("button");
+    buttons.forEach(b => { b.disabled = true; if(b.textContent === q.answer) b.classList.add("correct"); });
+    if(selected === q.answer) score++;
+    else button.classList.add("wrong");
+    resultEl.style.display = "block";
+    resultEl.textContent = q.tip;
+    nextBtn.style.display = "inline-block";
+}
+
+// Function to update progress on the server
+async function updateProgress(drillName, score) {
+    try {
+        const token = localStorage.getItem('token');
+        if(!token) throw new Error('No token found');
+
+        const response = await fetch('http://localhost:5000/api/students/complete-drill', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ drillName: drillName, score: score })
+        });
+
+        if(!response.ok) {
+            const errData = await response.json();
+            console.error('Server error:', errData);
+            let errorMessage = 'Failed to update progress. Please try again.';
+            if (response.status === 401) {
+                errorMessage = 'Authentication failed. Please log in again to save your progress.';
+            }
+            throw new Error(errorMessage);
+        }
+
+        // Redirect to dashboard after successful update
+        window.location.href = 'student-dashboard.html';
+    } catch(err) {
+        console.error(err);
+        showMessageBox(err.message);
+    }
+}
+
+nextBtn.addEventListener("click", () => {
+    currentQuestion++;
+    resultEl.style.display = "none";
+    nextBtn.style.display = "none";
+    if(currentQuestion < quizData.length) loadQuestion();
+    else {
+        // Send the raw score to the server
+        updateProgress("Flood Drill", score);
+    }
+});
+
+loadQuestion();
+</script>
+
+</body>
+</html>

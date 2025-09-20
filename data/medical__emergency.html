@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medical Emergency Drill</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f9fafc; color: #333; scroll-behavior: smooth; }
+    header { background: #1976d2; color: white; padding: 2rem 1rem; text-align: center; }
+    header h1 { margin: 0; font-size: 2.2rem; }
+    header p { margin: 0.5rem 0 0; font-size: 1.1rem; }
+
+    nav { background: #145ca1; padding: 0.7rem 1rem; text-align: center; position: sticky; top: 0; z-index: 100; }
+    nav a { color: white; margin: 0 1rem; text-decoration: none; font-weight: bold; transition: 0.3s; }
+    nav a:hover { color: #ffd54f; }
+
+    main { padding: 2rem 1rem; max-width: 900px; margin: auto; }
+    section { background: #fff; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 3px 8px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+    h2 { color: #1976d2; margin-top: 0; }
+    p { line-height: 1.6; }
+    ul { margin: 0.5rem 0 0 1rem; }
+    li { margin: 0.4rem 0; }
+
+    button, .btn-link { padding: 0.7rem 1.3rem; border: none; border-radius: 0.3rem; cursor: pointer; font-size: 1rem; margin: 0.4rem 0.3rem; display: inline-block; text-decoration: none; }
+    button:hover, .btn-link:hover { opacity: 0.9; }
+    .btn-primary { background: #1976d2; color: white; }
+    .btn-secondary { background: #e91e63; color: white; }
+
+    footer { background: #1976d2; color: white; padding: 1rem; text-align: center; margin-top: 2rem; }
+
+    /* Modal Styles */
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); }
+    .modal-content { background: white; margin: 5% auto; padding: 20px; border-radius: 0.5rem; width: 90%; max-width: 800px; }
+    .close { float: right; cursor: pointer; font-size: 22px; font-weight: bold; }
+    video { width: 100%; border-radius: 0.5rem; margin-top: 1rem; }
+
+    /* Media Queries for Mobile Phones */
+@media (max-width: 768px) {
+    /* Header adjustments */
+    header {
+        padding: 1.5rem 0.5rem;
+    }
+
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    header p {
+        font-size: 1rem;
+    }
+
+    /* Navigation adjustments */
+    nav {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.5rem 0;
+    }
+
+    nav a {
+        margin: 0.5rem 0;
+    }
+
+    /* Main content and sections */
+    main {
+        padding: 1rem 0.5rem;
+    }
+
+    section {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+    
+    p, li {
+        font-size: 0.95rem;
+    }
+
+    /* Button styles */
+    button, .btn-link {
+        align-items: center;
+        justify-content: space-evenly;
+        display: block;
+        width: 70%;
+        margin: 0.5rem 0;
+        text-align: center;
+    }
+    .btn-primary{
+      margin-left: 15%;
+    }
+    .btn-link{
+      margin-left: 15%;
+      width: 57%;
+    }
+
+    /* Modal adjustments */
+    .modal-content {
+        margin: 15% auto;
+        padding: 15px;
+    }
+
+    .close {
+        font-size: 20px;
+    }
+    
+    /* Video adjustment */
+    video {
+        width: 100%;
+        height: auto;
+    }
+}
+  </style>
+</head>
+<body>
+  <!-- Hero Header -->
+  <header id="home">
+    <h1>Medical Emergency Drill</h1>
+    <p>Building a culture of safety, awareness, and preparedness</p>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Welcome -->
+    <section>
+      <h2>Welcome</h2>
+      <p>
+        Welcome to the <strong>Medical Emergency Drill</strong>.  
+        This program prepares individuals and organizations
+        to respond effectively during emergencies, ensuring safety,
+        confidence, and resilience.
+      </p>
+    </section>
+
+    <!-- Importance of Awareness -->
+    <section id="importance">
+      <h2>Importance of Medical Awareness</h2>
+      <p>
+        Medical awareness is essential in emergencies.  
+        By learning basic first aid and response actions:
+      </p>
+      <ul>
+        <li>⚡ Quick actions save lives during critical moments.</li>
+        <li>🛡 Communities become safer and more resilient.</li>
+        <li>🩺 Early response prevents conditions from worsening.</li>
+        <li>🤝 Everyone contributes to collective safety.</li>
+      </ul>
+    </section>
+
+    <!-- Learn More -->
+    <section id="learn">
+      <h2>Learn More</h2>
+      <p>
+        Watch training videos and guides to strengthen your response skills.  
+        Click below to access resources:
+      </p>
+      <button class="btn-primary" onclick="openModal('videoModal')">📺 Watch Video Guide</button>
+      <a href="medicalquiz.html" class="btn-link btn-secondary">❓ Take Quiz Game</a>
+    </section>
+
+    <!-- Next Steps -->
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2025 Medical Emergency Drill Training</p>
+  </footer>
+
+  <!-- Video Modal -->
+  <div id="videoModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('videoModal')">&times;</span>
+    <h2>Emergency Drill Video Guide</h2>
+    <iframe width="100%" height="315"
+      src="https://www.youtube.com/embed/OxPPwZci-lE"
+      title="Emergency Drill Video Guide"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen>
+    </iframe>
+  </div>
+</div>
+
+
+  <script>
+    // Modal controls
+    function openModal(id){ document.getElementById(id).style.display='block'; }
+    function closeModal(id){ document.getElementById(id).style.display='none'; }
+    window.onclick = function(event) {
+      const modal = document.getElementById('videoModal');
+      if(event.target == modal){ closeModal('videoModal'); }
+    }
+  </script>
+</body>
+</html>

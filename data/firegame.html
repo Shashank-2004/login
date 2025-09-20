@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire Safety Quiz</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #fff;
+            color: #111;
+            overflow-x: hidden;
+        }
+        .header {
+            background-color: #d84315;
+            color: #fff;
+            text-align: center;
+            padding: 40px 20px 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        .header p {
+            margin: 10px 0 0;
+            font-size: 1.2rem;
+        }
+        nav {
+            background-color: #b71c1c;
+            padding: 12px 0;
+        }
+        nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+        }
+        nav ul li {
+            display: inline;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+        nav ul li a:hover {
+            color: #ffe0b2;
+        }
+        #quiz-box {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 700px;
+            width: 90%;
+            margin: 40px auto;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            color: #111;
+        }
+        .question {
+            font-size: 20px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .options button {
+            display: block;
+            width: 100%;
+            margin: 8px 0;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #eee;
+            color: #111;
+            transition: background 0.3s;
+        }
+        .options button:hover {
+            background: #ddd;
+        }
+        .options button.correct {
+            background: #2e7d32;
+            color: white;
+        }
+        .options button.wrong {
+            background: #c62828;
+            color: white;
+        }
+        #next-btn {
+            margin-top: 20px;
+            padding: 12px 24px;
+            font-size: 16px;
+            background: #d84315;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: none;
+        }
+        #next-btn:hover {
+            background: #b71c1c;
+        }
+        #result {
+            display: none;
+            margin-top: 20px;
+            font-size: 18px;
+            text-align: center;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔥 Fire Safety Quiz 🧯</h1>
+        <p>Test your fire safety knowledge and learn life-saving tips.</p>
+    </div>
+    <div id="quiz-box">
+        <div class="question" id="question">Question text</div>
+        <div class="options" id="options"></div>
+        <button id="next-btn">Next</button>
+        <div id="result"></div>
+    </div>
+    <script>
+        // Check for authentication before starting the quiz
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert("You must be logged in to take this quiz.");
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const res = await fetch('http://localhost:5000/api/me', {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!res.ok) {
+                    alert("Your session has expired. Please log in again.");
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('role');
+                    window.location.href = 'login.html';
+                } else {
+                    // Token is valid, proceed with quiz logic
+                    loadQuestion();
+                }
+            } catch (error) {
+                alert("An error occurred. Please try logging in again.");
+                window.location.href = 'login.html';
+            }
+        });
+        
+        const quizData = [
+          {
+            question: "What should you NEVER use to put out an electrical fire?",
+            options: ["Water", "CO2 Extinguisher", "Dry Powder Extinguisher", "Turn off the power"],
+            answer: "Water",
+            tip: "⚡ Water conducts electricity — it can shock you! Use CO2 or Dry Powder."
+          },
+          {
+            question: "Which extinguisher is best for a cooking oil fire?",
+            options: ["Foam", "Water", "Wet Chemical", "Sand"],
+            answer: "Wet Chemical",
+            tip: "🍳 For oil fires, use a Wet Chemical extinguisher — never water!"
+          },
+          {
+            question: "For a paper or wood fire, which extinguisher is most suitable?",
+            options: ["Foam", "CO2", "Dry Powder", "Wet Chemical"],
+            answer: "Foam",
+            tip: "📄 Foam or Water extinguishers are best for Class A fires (wood, paper)."
+          },
+          {
+            question: "What’s the first thing you should do if a fire starts?",
+            options: ["Run away immediately", "Raise the alarm", "Find your belongings", "Wait for instructions"],
+            answer: "Raise the alarm",
+            tip: "🚨 Always alert others first and call emergency services."
+          },
+          {
+            question: "What should you do if your clothes catch fire?",
+            options: ["Run quickly", "Stop, Drop, and Roll", "Throw water on yourself", "Call for help only"],
+            answer: "Stop, Drop, and Roll",
+            tip: "🧍 Stop, drop to the ground, and roll to smother the flames."
+          }
+        ];
+    
+        let currentQuestion = 0;
+        let score = 0;
+    
+        const questionEl = document.getElementById("question");
+        const optionsEl = document.getElementById("options");
+        const nextBtn = document.getElementById("next-btn");
+        const resultEl = document.getElementById("result");
+    
+        function loadQuestion() {
+            let q = quizData[currentQuestion];
+            questionEl.textContent = q.question;
+            optionsEl.innerHTML = "";
+            q.options.forEach(option => {
+                const btn = document.createElement("button");
+                btn.textContent = option;
+                btn.onclick = () => checkAnswer(btn, option);
+                optionsEl.appendChild(btn);
+            });
+        }
+    
+        function checkAnswer(button, selected) {
+            let q = quizData[currentQuestion];
+            let buttons = optionsEl.querySelectorAll("button");
+            buttons.forEach(b => {
+                b.disabled = true;
+                if (b.textContent === q.answer) {
+                    b.classList.add("correct");
+                }
+            });
+    
+            if (selected === q.answer) {
+                score++;
+            } else {
+                button.classList.add("wrong");
+            }
+    
+            resultEl.style.display = "block";
+            resultEl.textContent = q.tip;
+    
+            nextBtn.style.display = "inline-block";
+        }
+    
+        nextBtn.addEventListener("click", () => {
+            currentQuestion++;
+            resultEl.style.display = "none";
+            nextBtn.style.display = "none";
+            if (currentQuestion < quizData.length) {
+                loadQuestion();
+            } else {
+                showFinalScore();
+            }
+        });
+    
+        function showFinalScore() {
+            questionEl.style.display = "none";
+            optionsEl.style.display = "none";
+            nextBtn.style.display = "none";
+            resultEl.style.display = "block";
+            
+            const scorePercentage = Math.floor((score / quizData.length) * 25);
+    
+            resultEl.innerHTML = `
+              ✅ Quiz Completed!<br>
+              Your Score: ${score} / ${quizData.length}<br>
+              Earned points: ${scorePercentage}<br><br>
+              <button id="dashboard-btn" style="
+                  background:#d84315;
+                  color:white;
+                  font-size:16px;
+                  padding:10px 20px;
+                  border:none;
+                  border-radius:8px;
+                  cursor:pointer;">
+                  🔙 Return to Dashboard
+              </button>
+            `;
+    
+            document.getElementById('dashboard-btn').addEventListener('click', () => {
+                saveScoreAndRedirect(scorePercentage);
+            });
+        }
+    
+      async function saveScoreAndRedirect(scorePercentage) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('You must be logged in to save your progress.');
+        window.location.href = 'login.html';
+        return;
+    }
+
+    try {
+        // 1️⃣ First, record drill completion
+        const drillRes = await fetch('http://127.0.0.1:5000/api/students/complete-drill', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({}) // nothing needed in body
+        });
+
+        if (!drillRes.ok) {
+            const data = await drillRes.json();
+            alert(`Failed to record drill completion: ${data.message}`);
+            return;
+        }
+
+        // 2️⃣ Then, update preparedness score
+        const scoreRes = await fetch('http://127.0.0.1:5000/api/students/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ preparednessScore: scorePercentage })
+        });
+
+        if (!scoreRes.ok) {
+            const data = await scoreRes.json();
+            alert(`Failed to update preparedness score: ${data.message}`);
+            return;
+        }
+
+        alert('✅ Drill completion and score recorded!');
+    } catch (error) {
+        console.error('Error saving progress:', error);
+        alert('An error occurred while saving your progress. Please check the console for details.');
+    } finally {
+        window.location.href = 'student-dashboard.html';
+    }
+}
+
+    </script>
+</body>
+</html>

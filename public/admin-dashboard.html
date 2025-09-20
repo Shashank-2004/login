@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DisasterDock - Admin Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: #f4f6f9;
+  }
+
+  header {
+    background: #0b74de;
+    color: #fff;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 0.8rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+
+  th {
+    background: #f0f4f8;
+  }
+
+  .chart-container {
+    position: relative;
+    height: 300px;
+  }
+
+  button {
+    background:#fff;color:#0b74de;padding:8px 15px;border:none;border-radius:8px;cursor:pointer;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Welcome, <span id="adminName">Admin</span></h1>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<div class="container">
+  <div class="grid">
+    <div class="card">
+      <h3>Total Students</h3>
+      <div id="totalStudents" style="font-size:2rem;font-weight:bold;color:#0b74de;">--</div>
+    </div>
+    <div class="card">
+      <h3>Average Preparedness</h3>
+      <div id="avgPreparedness" style="font-size:2rem;font-weight:bold;color:#0b74de;">--%</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Student Preparedness Scores</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Student Name</th>
+          <th>School ID</th>
+          <th>Score</th>
+          <th>Drills Completed</th>
+        </tr>
+      </thead>
+      <tbody id="studentTable">
+        </tbody>
+    </table>
+  </div>
+  <br>
+  <div class="card">
+    <h3>Drill Participation</h3>
+    <div class="chart-container">
+      <canvas id="drillChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Function to update the chart data
+  function updateDrillChart(data) {
+    if (window.drillChartInstance) {
+      window.drillChartInstance.destroy();
+    }
+    const ctx = document.getElementById('drillChart').getContext('2d');
+    window.drillChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Fire Drill', 'Earthquake Drill', 'First Aid', 'Evacuation Drill', 'Lockdown Drill'],
+        datasets: [{
+          label: 'Students Completed',
+          data: data,
+          backgroundColor: '#0b74de'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 120
+          }
+        }
+      }
+    });
+  }
+
+  // This function fetches students and updates the dashboard
+  async function fetchAndRenderStudents() {
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+
+    if (!token || role !== 'admin') {
+      alert('Not authenticated or authorized.');
+      window.location.href = 'login.html';
+      return;
+    }
+
+    try {
+      // Fetch the logged-in admin's details
+      const adminRes = await fetch('http://localhost:5000/api/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const admin = await adminRes.json();
+      
+      // Update the admin's name on the dashboard
+      document.getElementById('adminName').textContent = admin.name.split(' ')[0];
+
+      // Fetch the students for this admin's school
+      const studentsRes = await fetch('http://localhost:5000/api/admin/students', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!studentsRes.ok) {
+        throw new Error('Failed to fetch student data.');
+      }
+
+      const students = await studentsRes.json();
+      const studentTable = document.getElementById('studentTable');
+      studentTable.innerHTML = '';
+
+      let totalPreparedness = 0;
+      const drillCounts = {
+        'Fire Drill': 0,
+        'Earthquake Drill': 0,
+        'First Aid': 0,
+        'Evacuation Drill': 0,
+        'Lockdown Drill': 0
+      };
+
+      students.forEach(student => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${student.name}</td>
+          <td>${student.schoolId}</td>
+          <td>${student.preparednessScore}%</td>
+          <td>${student.drillsCompleted}/4</td>
+        `;
+        studentTable.appendChild(row);
+        totalPreparedness += student.preparednessScore;
+
+        if (student.drillsCompleted >= 1) drillCounts['Fire Drill']++;
+        if (student.drillsCompleted >= 2) drillCounts['Earthquake Drill']++;
+        if (student.drillsCompleted >= 3) drillCounts['First Aid']++;
+        if (student.drillsCompleted >= 4) drillCounts['Evacuation Drill']++;
+        if (student.drillsCompleted >= 5) drillCounts['Lockdown Drill']++;
+      });
+
+      const totalStudents = students.length;
+      const avgPreparedness = totalStudents > 0 ? Math.floor(totalPreparedness / totalStudents) : 0;
+      document.getElementById('totalStudents').textContent = totalStudents;
+      document.getElementById('avgPreparedness').textContent = `${avgPreparedness}%`;
+
+      updateDrillChart(Object.values(drillCounts));
+
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      alert('An error occurred while loading data.');
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    alert('Logged out!');
+    window.location.href = 'login.html';
+  }
+
+  document.addEventListener('DOMContentLoaded', fetchAndRenderStudents);
+</script>
+
+</body>
+</html>

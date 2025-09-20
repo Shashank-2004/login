@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DisasterDock - Student Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    body { margin: 0; font-family: 'Poppins', sans-serif; background: #f4f6f9; }
+    header { background: #0b74de; color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { margin: 0; font-size: 1.5rem; }
+    .container { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; }
+    .score { font-size: 2.5rem; font-weight: bold; color: #0b74de; }
+    .task-list { list-style-type: none; padding: 0; margin: 0; }
+    .task-list li { margin: 0.5rem 0; transition: background-color 0.3s ease; border-radius: 8px; }
+    .task-list li a { text-decoration: none; color: #0b74de; display: block; padding: 0.5rem 1rem; }
+    .task-list li:hover { background-color: #e6f3ff; cursor: pointer; }
+    .card { background: #fff; border-radius: 15px; padding: 1.5rem 2rem; box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+    .chart-container { position: relative; height: 250px; }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>Welcome, <span id="studentName">Student</span></h1>
+    <button onclick="logout()" style="background:#fff;color:#0b74de;padding:8px 15px;border:none;border-radius:8px;cursor:pointer;">Logout</button>
+</header>
+
+<div class="container">
+    <div class="grid">
+        <div class="card">
+            <h3>Preparedness Score</h3>
+            <div class="score"><span id="preparednessScore">0</span>%</div>
+        </div>
+        <div class="card">
+            <h3>Drills Completed</h3>
+            <div class="score"><span id="drillsCompletedCount">0</span>/4</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Pending Tasks</h3>
+        <ul class="task-list" id="pendingTaskList">
+            <li><a href="fire.html" data-drill-id="1">Complete Fire Drill</a></li>
+            <li><a href="earthquake.html" data-drill-id="2">Complete Earthquake Drill</a></li>
+            <li><a href="flood.html" data-drill-id="3">Complete Flood Drill</a></li>
+            <li><a href="medical__emergency.html" data-drill-id="4">Complete Medical Emergency Drill</a></li>
+        </ul>
+    </div>
+    
+    <div class="card">
+      <h3>Completed Tasks</h3>
+      <ul class="task-list" id="completedTaskList"></ul>
+    </div>
+
+    <div class="card">
+        <h3>Performance Overview</h3>
+        <div class="chart-container">
+            <canvas id="scoreChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+function renderChart(score) {
+    const ctx = document.getElementById('scoreChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Your Score'],
+            datasets: [{
+                label: 'Preparedness Score',
+                data: [score],
+                fill: true,
+                backgroundColor: 'rgba(11, 116, 222, 0.2)',
+                borderColor: '#0b74de',
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, max: 100 } }
+        }
+    });
+}
+
+function moveCompletedTasks(completedDrillsCount) {
+    const pendingList = document.getElementById('pendingTaskList');
+    const completedList = document.getElementById('completedTaskList');
+    const allDrills = Array.from(pendingList.children);
+    const drillMap = {
+        'Complete Fire Drill': 1,
+        'Complete Earthquake Drill': 2,
+        'Complete Flood Drill': 3,
+        'Complete Medical Emergency Drill': 4
+    };
+    allDrills.forEach(li => {
+        const drillName = li.textContent.trim();
+        if (drillMap[drillName] && drillMap[drillName] <= completedDrillsCount) {
+            completedList.appendChild(li);
+            li.style.color = '#888';
+        }
+    });
+}
+
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    alert('Logged out!');
+    window.location.href = 'login.html';
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const token = localStorage.getItem('token');
+    if (!token) { window.location.href = 'login.html'; return; }
+
+    try {
+        const res = await fetch('http://localhost:5000/api/me', {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+            const user = await res.json();
+            document.getElementById('studentName').textContent = user.name.split(' ')[0];
+            document.getElementById('preparednessScore').textContent = user.preparednessScore;
+            document.getElementById('drillsCompletedCount').textContent = user.drillsCompleted;
+            renderChart(user.preparednessScore);
+            moveCompletedTasks(user.drillsCompleted);
+        } else {
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            alert('Session expired. Please log in again.');
+            window.location.href = 'login.html';
+        }
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        alert('An error occurred. Please try again later.');
+        window.location.href = 'login.html';
+    }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Earthquake Drill Quiz Game</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #fff5f5; color: #333; }
+    header, footer { background: #d32f2f; color: white; padding: 1rem 2rem; text-align: center; }
+    header h1 { margin: 0; font-size: 1.8rem; }
+    main { padding: 2rem; max-width: 800px; margin: auto; }
+    #game-box { background: #fff; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-align: center; }
+    h2 { color: #d32f2f; }
+    .question { font-size: 1.3rem; margin: 1rem 0 1.5rem; font-weight: 600; }
+    .options button { display: block; margin: 0.6rem auto; padding: 0.8rem 1.2rem; border: none; border-radius: 0.5rem; cursor: pointer; font-size: 1rem; width: 90%; transition: 0.3s; }
+    .options button:hover { transform: scale(1.03); }
+    .correct { background: #4caf50; color: white; }
+    .wrong { background: #f44336; color: white; }
+    .neutral { background: #d32f2f; color: white; }
+    #score-box { margin-top: 1rem; font-weight: bold; font-size: 1.1rem; }
+    #progress { height: 10px; background: #ddd; border-radius: 5px; margin: 1.2rem 0; }
+    #progress-bar { height: 100%; width: 0%; background: #d32f2f; border-radius: 5px; transition: width 0.5s; }
+    #next-btn { margin-top: 1.5rem; display: none; padding: 0.8rem 1.5rem; background: #e91e63; color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-size: 1rem; }
+    #next-btn:hover { background: #ad1457; }
+    #end-screen { display: none; }
+    #restart-btn { padding: 0.7rem 1.5rem; background: #d32f2f; color: white; border: none; border-radius: 0.5rem; cursor: pointer; margin-top: 1rem; }
+    #restart-btn:hover { background: #a32121; }
+    a { text-decoration: none; color: #d32f2f; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Earthquake Drill - Quiz Game</h1>
+    <p>Test your earthquake preparedness knowledge!</p>
+  </header>
+
+  <main>
+    <div id="game-box">
+      <div id="quiz-screen">
+        <h2 id="question-number">Question 1</h2>
+        <div id="progress"><div id="progress-bar"></div></div>
+        <div class="question" id="question-text"></div>
+        <div class="options" id="options-box"></div>
+        <div id="score-box">Score: 0</div>
+        <button id="next-btn">Next ➡</button>
+        <p><a href="earthquake.html">⬅ Back to Earthquake Drill</a></p>
+      </div>
+
+      <div id="end-screen">
+        <h2>🎉 Quiz Completed!</h2>
+        <p id="final-score"></p>
+        <button id="restart-btn">🔄 Play Again</button>
+        <p><a href="earthquake.html">⬅ Back to Earthquake Drill</a></p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Earthquake Drill Training</p>
+  </footer>
+
+  <script>
+    const questions = [
+      { q: "What should you do first when an earthquake starts?", options: ["Run outside immediately", "Drop, Cover, and Hold On", "Stand near windows", "Use the elevator"], correct: 1 },
+      { q: "Where is the safest place indoors during an earthquake?", options: ["Next to glass doors", "Under sturdy furniture", "In the elevator", "At the building entrance"], correct: 1 },
+      { q: "If you are outside during an earthquake, what should you do?", options: ["Go back inside", "Move to an open area", "Hide near buildings", "Stand under a tree"], correct: 1 },
+      { q: "If you are driving during an earthquake, what’s the best action?", options: ["Speed up to escape", "Stop safely and stay inside", "Stop under a bridge", "Exit the car immediately"], correct: 1 },
+      { q: "What should you do after the shaking stops?", options: ["Check for injuries and hazards", "Turn on the gas immediately", "Use elevators to exit", "Ignore emergency instructions"], correct: 0 },
+      { q: "Why should you avoid doorways during earthquakes?", options: ["They are too narrow", "They may collapse", "They are not structurally safe", "All of the above"], correct: 3 }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let quizCompleted = false;
+
+    const quizScreen = document.getElementById("quiz-screen");
+    const endScreen = document.getElementById("end-screen");
+    const questionNumberEl = document.getElementById("question-number");
+    const questionTextEl = document.getElementById("question-text");
+    const optionsBoxEl = document.getElementById("options-box");
+    const scoreBoxEl = document.getElementById("score-box");
+    const progressBarEl = document.getElementById("progress-bar");
+    const nextBtn = document.getElementById("next-btn");
+    const finalScoreEl = document.getElementById("final-score");
+    const restartBtn = document.getElementById("restart-btn");
+
+    function updateProgress() {
+      const progress = ((currentQuestion + 1) / questions.length) * 100;
+      progressBarEl.style.width = `${progress}%`;
+    }
+
+    function loadQuestion() {
+      const q = questions[currentQuestion];
+      questionNumberEl.textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
+      questionTextEl.textContent = q.q;
+      optionsBoxEl.innerHTML = "";
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement("button");
+        btn.textContent = opt;
+        btn.classList.add("neutral");
+        btn.onclick = () => checkAnswer(i, btn);
+        optionsBoxEl.appendChild(btn);
+      });
+      nextBtn.style.display = "none";
+      updateProgress();
+    }
+
+    function checkAnswer(selected, btn) {
+      if (quizCompleted) return;
+      const q = questions[currentQuestion];
+      const buttons = optionsBoxEl.querySelectorAll("button");
+      buttons.forEach((b, i) => {
+        b.disabled = true;
+        if (i === q.correct) b.className = "correct";
+        else if (i === selected) b.className = "wrong";
+        else b.className = "neutral";
+      });
+      if (selected === q.correct) score++;
+      scoreBoxEl.textContent = `Score: ${score}`;
+      nextBtn.style.display = "inline-block";
+    }
+
+    nextBtn.addEventListener("click", () => {
+      currentQuestion++;
+      if (currentQuestion < questions.length) loadQuestion();
+      else endGame();
+    });
+
+    restartBtn.addEventListener("click", restartQuiz);
+
+    function endGame() {
+      quizCompleted = true;
+      quizScreen.style.display = "none";
+      endScreen.style.display = "block";
+      finalScoreEl.textContent = `Your final score is ${score} out of ${questions.length}.`;
+      completeQuiz(score);
+    }
+
+    function restartQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      quizCompleted = false;
+      quizScreen.style.display = "block";
+      endScreen.style.display = "none";
+      scoreBoxEl.textContent = "Score: 0";
+      loadQuestion();
+    }
+
+    async function completeQuiz(finalScore) {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    alert('You must be logged in to save your quiz results.');
+    window.location.href = 'login.html';
+    return;
+  }
+
+  try {
+    const preparednessScore = Math.floor((finalScore / questions.length) * 100);
+
+    // ✅ Mark Earthquake Drill completed (increments drill count automatically)
+    const drillRes = await fetch('http://localhost:5000/api/students/complete-drill', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ drillId: 2 }) // Earthquake Drill
+    });
+
+    if (!drillRes.ok) {
+      const data = await drillRes.json();
+      alert(`Failed to record drill completion: ${data.message}`);
+      return;
+    }
+
+    // ✅ Update preparedness score
+    const res = await fetch('http://localhost:5000/api/students/update', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ preparednessScore })
+    });
+
+    if (res.ok) {
+      window.location.href = 'student-dashboard.html';
+    } else {
+      const data = await res.json();
+      alert(`Failed to update score: ${data.message || 'Unknown error'}`);
+    }
+
+  } catch (error) {
+    console.error('Error completing quiz:', error);
+    alert('An error occurred while saving your progress.');
+  }
+}
+
+    loadQuestion();
+  </script>
+</body>
+</html>

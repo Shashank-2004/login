@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medical Drill Quiz Game</title>
+<style>
+  body { 
+    font-family: 'Segoe UI', Arial, sans-serif; 
+    margin: 0; 
+    background: #eef4ff; 
+    color: #333; 
+  }
+  header, footer { 
+    background: #1976d2; 
+    color: white; 
+    padding: 1rem 2rem; 
+    text-align: center; 
+  }
+  header h1 { 
+    margin: 0; 
+    font-size: 1.8rem; 
+  }
+  main { 
+    padding: 2rem; 
+    max-width: 800px; 
+    margin: auto; 
+  }
+  #game-box { 
+    background: #fff; 
+    padding: 2rem; 
+    border-radius: 1rem; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+    text-align: center; 
+  }
+  h2 { color: #1976d2; }
+  .question { font-size: 1.3rem; margin: 1rem 0 1.5rem; font-weight: 600; }
+  .options button { 
+    display: block; 
+    margin: 0.6rem auto; 
+    padding: 0.8rem 1.2rem; 
+    border: none; 
+    border-radius: 0.5rem; 
+    cursor: pointer; 
+    font-size: 1rem; 
+    width: 90%; 
+    transition: 0.3s; 
+  }
+  .options button:hover { transform: scale(1.03); }
+  .correct { background: #4caf50; color: white; }
+  .wrong { background: #f44336; color: white; }
+  .neutral { background: #1976d2; color: white; }
+  #score-box { margin-top: 1rem; font-weight: bold; font-size: 1.1rem; }
+  #progress { height: 10px; background: #ddd; border-radius: 5px; margin: 1.2rem 0; }
+  #progress-bar { height: 100%; width: 0%; background: #1976d2; border-radius: 5px; transition: width 0.5s; }
+  #next-btn { margin-top: 1.5rem; display: none; padding: 0.8rem 1.5rem; background: #e91e63; color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-size: 1rem; }
+  #next-btn:hover { background: #ad1457; }
+  #end-screen { display: none; }
+  #restart-btn { padding: 0.7rem 1.5rem; background: #1976d2; color: white; border: none; border-radius: 0.5rem; cursor: pointer; margin-top: 1rem; }
+  #restart-btn:hover { background: #0f5ba3; }
+  a { text-decoration: none; color: #1976d2; font-weight: bold; }
+  .message-box {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    z-index: 1000;
+    text-align: center;
+  }
+  .message-box button {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background: #0277bd;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Medical Emergency Drill - Quiz Game</h1>
+  <p>Test your safety knowledge in a fun way!</p>
+</header>
+
+<main>
+  <div id="game-box">
+    <div id="quiz-screen">
+      <h2 id="question-number">Question 1</h2>
+      <div id="progress"><div id="progress-bar"></div></div>
+      <div class="question" id="question-text"></div>
+      <div class="options" id="options-box"></div>
+      <div id="score-box">Score: 0</div>
+      <button id="next-btn">Next ➡</button>
+      <p><a href="medical_emergency.html">⬅ Back to Drill Home</a></p>
+    </div>
+
+    <div id="end-screen">
+      <h2>🎉 Quiz Completed!</h2>
+      <p id="final-score"></p>
+      <button id="restart-btn">🔄 Play Again</button>
+      <p><a href="medical_emergency.html">⬅ Back to Drill Home</a></p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <p>&copy; 2025 Medical Emergency Drill Training</p>
+</footer>
+
+<script>
+const questions = [
+    { q: "What’s the first step when you hear an alarm?", options: ["Ignore it", "Evacuate immediately", "Call a friend", "Wait for instructions"], correct: 1 },
+    { q: "Where is the safe gathering point after evacuation?", options: ["Cafeteria", "Parking lot", "Assembly area", "Near the exit"], correct: 2 },
+    { q: "Who is responsible for coordinating the emergency?", options: ["Incident Commander", "The janitor", "Any volunteer", "Receptionist"], correct: 0 },
+    { q: "What is the universal emergency number in most countries?", options: ["100", "911", "123", "808"], correct: 1 },
+    { q: "What should you NOT do when someone faints?", options: ["Check breathing", "Raise their legs", "Give them water immediately", "Call for help"], correct: 2 },
+    { q: "Which of these is part of basic first aid?", options: ["Stop bleeding", "Check responsiveness", "Perform CPR if needed", "All of the above"], correct: 3 }
+];
+
+let currentQuestion = 0;
+let score = 0;
+
+const questionText = document.getElementById("question-text");
+const optionsBox = document.getElementById("options-box");
+const scoreBox = document.getElementById("score-box");
+const nextBtn = document.getElementById("next-btn");
+const endScreen = document.getElementById("end-screen");
+const quizScreen = document.getElementById("quiz-screen");
+const finalScore = document.getElementById("final-score");
+const progressBar = document.getElementById("progress-bar");
+
+// Custom message box for errors
+function showMessageBox(message) {
+    const messageBox = document.createElement('div');
+    messageBox.className = 'message-box';
+    messageBox.innerHTML = `<p>${message}</p><button onclick="document.body.removeChild(this.parentElement)">OK</button>`;
+    document.body.appendChild(messageBox);
+}
+
+// Update progress bar visually
+function updateProgressBar() {
+    let progressPercent = ((currentQuestion) / questions.length) * 100;
+    progressBar.style.width = progressPercent + "%";
+}
+
+function loadQuestion() {
+    const q = questions[currentQuestion];
+    document.getElementById("question-number").textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
+    questionText.textContent = q.q;
+    optionsBox.innerHTML = "";
+    q.options.forEach((opt, i) => {
+        const btn = document.createElement("button");
+        btn.textContent = opt;
+        btn.classList.add("neutral");
+        btn.onclick = () => checkAnswer(i, btn);
+        optionsBox.appendChild(btn);
+    });
+    nextBtn.style.display = "none";
+    updateProgressBar();
+}
+
+function checkAnswer(selected, btn) {
+    const q = questions[currentQuestion];
+    const buttons = optionsBox.querySelectorAll("button");
+    buttons.forEach((b, i) => {
+        if (i === q.correct) b.className = "correct";
+        else if (i === selected) b.className = "wrong";
+        else b.className = "neutral";
+        b.disabled = true;
+    });
+    if (selected === q.correct) score++;
+    scoreBox.textContent = `Score: ${score}`;
+    nextBtn.style.display = "inline-block";
+}
+
+nextBtn.addEventListener("click", () => {
+    currentQuestion++;
+    if (currentQuestion < questions.length) loadQuestion();
+    else endGame();
+});
+
+// Async function to update backend
+async function updateProgress(drillName, score) {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('No token found');
+
+        const response = await fetch('http://localhost:5000/api/students/complete-drill', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ drillName: drillName, score: score })
+        });
+
+        if (!response.ok) {
+            const errData = await response.json();
+            console.error('Server error:', errData);
+            let errorMessage = 'Failed to update progress. Please try again.';
+            if (response.status === 401) errorMessage = 'Authentication failed. Please log in again.';
+            throw new Error(errorMessage);
+        }
+
+        window.location.href = 'student-dashboard.html';
+    } catch (err) {
+        console.error(err);
+        showMessageBox(err.message);
+    }
+}
+
+function endGame() {
+    quizScreen.style.display = "none";
+    endScreen.style.display = "block";
+    progressBar.style.width = "100%";
+    finalScore.textContent = `Your final score is ${score} out of ${questions.length}`;
+
+    // Call backend to update MongoDB
+    updateProgress("Medical Drill", score);
+}
+
+document.getElementById("restart-btn").addEventListener("click", () => {
+    score = 0;
+    currentQuestion = 0;
+    quizScreen.style.display = "block";
+    endScreen.style.display = "none";
+    scoreBox.textContent = "Score: 0";
+    progressBar.style.width = "0%";
+    loadQuestion();
+});
+
+// Start game
+loadQuestion();
+</script>
+</body>
+</html>

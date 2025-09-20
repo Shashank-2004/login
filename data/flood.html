@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flood Safety Drill</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #111;
+    }
+
+    /* Header Section */
+    .header {
+      background-color: #0277bd;
+      color: #fff;
+      text-align: center;
+      padding: 40px 20px 20px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 2.5rem;
+      font-weight: bold;
+    }
+    .header p {
+      margin: 10px 0 0;
+      font-size: 1.2rem;
+    }
+
+    /* Navigation */
+    nav {
+      background-color: #01579b;
+      padding: 12px 0;
+    }
+    nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+    }
+    nav ul li {
+      display: inline;
+    }
+    nav ul li a {
+      color: white;
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: bold;
+      transition: color 0.3s;
+    }
+    nav ul li a:hover {
+      color: #bbdefb;
+    }
+
+    /* Section Boxes */
+    .section {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 25px;
+      background: #f9f9f9;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .section h2 {
+      color: #0277bd;
+      margin-bottom: 15px;
+    }
+    .section p, .section ul {
+      line-height: 1.6;
+    }
+    .section ul {
+      padding-left: 20px;
+    }
+
+    /* Quiz Button */
+    .quiz-btn {
+      display: block;
+      margin: 20px auto 0;
+      background: #0277bd;
+      color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      transition: background 0.3s;
+    }
+    .quiz-btn:hover {
+      background: #01579b;
+    }
+
+    /* Media Queries for Mobile Phones */
+@media (max-width: 768px) {
+    /* Adjust header for smaller screens */
+    .header {
+        padding: 30px 10px 15px;
+    }
+
+    .header h1 {
+        font-size: 2rem;
+    }
+
+    .header p {
+        font-size: 1rem;
+    }
+
+    /* Adjust navigation for vertical stacking */
+    nav ul {
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+    }
+
+    /* Adjust section layout */
+    .section {
+        margin: 20px 10px;
+        padding: 20px;
+    }
+
+    .section h2 {
+        font-size: 1.5rem;
+    }
+
+    .section p, .section ul {
+        font-size: 0.95rem;
+    }
+
+    /* Adjust video size */
+    .section video {
+        width: 100%; /* Make video fill the container */
+        height: auto;
+    }
+
+    /* Adjust quiz button */
+    .quiz-btn {
+        padding: 10px 20px;
+        font-size: 1rem;
+        width: 90%;
+        box-sizing: border-box; /* Ensures padding is included in width */
+    }
+}
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <h1>Flood Drill</h1>
+    <p>Stay safe. Stay alert. Know what to do when the waters rise.</p>
+  </div>
+
+  <!-- Navigation -->
+
+  <!-- Intro Section -->
+  <div id="home" class="section">
+    <h2>Welcome to the Flood Safety Drill</h2>
+    <p>Floods are among the most common natural disasters. Knowing what to do before, during, and after a flood can save lives and reduce injuries. This drill will prepare you to act calmly and responsibly.</p>
+  </div>
+
+  <!-- Importance Section -->
+  <div id="importance" class="section">
+    <h2>Why is Flood Awareness Important?</h2>
+    <p>Floods can happen suddenly and affect entire communities. By being prepared, you can protect your family, reduce damage, and stay safe. Awareness ensures you know the safest routes, supplies to keep, and how to respond under pressure.</p>
+  </div>
+
+  <!-- Learn More Section -->
+  <div id="videos" class="section">
+  <h2>Watch & Learn</h2>
+  <p>Flood preparedness, evacuation steps, and safety measures.</p>
+  <div class="video-box">
+    <iframe width="100%" height="400" 
+      src="https://www.youtube.com/embed/Ba3dmYQGtMk" 
+      title="Flood Safety Tips"
+      frameborder="0" 
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+      allowfullscreen>
+    </iframe>
+  </div>
+</div>
+
+
+  <!-- Next Steps Section -->
+  <div id="next" class="section">
+    <h2>Next Steps After the Drill</h2>
+    <ul>
+      <li>✔ Discuss evacuation routes with your family and practice them.</li>
+      <li>✔ Keep an emergency kit ready with essentials like food, water, flashlight, and first aid.</li>
+      <li>✔ Learn how to turn off electricity and gas in case of flooding.</li>
+      <li>✔ Stay updated with local alerts and weather warnings.</li>
+    </ul>
+  </div>
+
+  <!-- Emergency Contacts Section -->
+  <div id="contacts" class="section">
+    <h2>Emergency Numbers & Resources</h2>
+    <ul>
+      <li>🚨 <strong>National Emergency Helpline:</strong> 112</li>
+      <li>🚑 <strong>Ambulance:</strong> 102</li>
+      <li>👮 <strong>Police:</strong> 100</li>
+      <li>🔥 <strong>Fire Services:</strong> 101</li>
+      <li>🌊 <strong>Flood Relief / Disaster Helpline:</strong> 1078</li>
+    </ul>
+    <p>Keep these numbers saved and accessible. In case of flooding, stay calm, call the appropriate service, and follow official updates from local authorities.</p>
+  </div>
+
+  <!-- Quiz Section -->
+  <div class="section">
+    <h2>Test Your Knowledge</h2>
+    <p>Ready to see how prepared you are? Take the Flood Safety Quiz!</p>
+    <a href="floodquiz.html" class="quiz-btn">Start Quiz</a>
+  </div>
+
+</body>
+</html>
