@@ -11,9 +11,10 @@ const { authMiddleware, requireAdmin } = require('./middleware/auth');
 
 const app = express();
 app.use(cors({
-    origin: ['https://yourfrontenddomain.com'], // replace with frontend domain
+    origin: '*',  // allow all origins temporarily
     credentials: true
 }));
+
 app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 5000;
