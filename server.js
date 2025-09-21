@@ -21,7 +21,7 @@ app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
-const SECRET_KEY = process.env.SECRET_KEY || 'SECRET123'; // Fallback is still not secure but kept for code originality
+const SECRET_KEY = process.env.SECRET_KEY; // Fallback is still not secure but kept for code originality
 
 if (!MONGO_URI) {
     console.error('MONGO_URI not set. Set it in .env or environment.');
