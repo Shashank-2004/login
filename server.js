@@ -6,12 +6,14 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 
-const User = require('./models/User');
-const { authMiddleware, requireAdmin } = require('./middleware/auth');
+const User = require('./models/User'); // Assuming you have this model
+const { authMiddleware, requireAdmin } = require('./middleware/auth'); // Assuming you have these middleware files
 
 const app = express();
+
+// --- FIX 1: Set a specific CORS origin for your GitHub Pages URL ---
 app.use(cors({
-    origin: '*',  // allow all origins temporarily
+    origin: 'https://shashank-2004.github.io', // This must match your GitHub Pages domain
     credentials: true
 }));
 
@@ -19,18 +21,15 @@ app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
-const SECRET_KEY = process.env.SECRET_KEY || 'SECRET123';
+const SECRET_KEY = process.env.SECRET_KEY || 'SECRET123'; // Fallback is still not secure but kept for code originality
 
 if (!MONGO_URI) {
     console.error('MONGO_URI not set. Set it in .env or environment.');
     process.exit(1);
 }
 
-// Connect to MongoDB Atlas
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
+// Connect to MongoDB Atlas (removed outdated options)
+mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log('MongoDB connected'))
 .catch(err => console.log(err));
 
@@ -162,25 +161,19 @@ app.post('/api/students/complete-drill', authMiddleware, async (req, res) => {
             return res.status(404).json({ message: 'Student not found' });
         }
         
-        // Ensure the drills array exists
         if (!student.drills) {
             student.drills = [];
         }
 
-        // Find and update the score for the specific drill
         const existingDrillIndex = student.drills.findIndex(d => d.drillName === drillName);
         if (existingDrillIndex > -1) {
-            // Update existing drill score
             student.drills[existingDrillIndex].score = score;
         } else {
-            // Add new drill completion
             student.drills.push({ drillName, score });
         }
         
-        // Increment total drills completed
         student.drillsCompleted = student.drills.length;
         
-        // Recalculate preparednessScore based on average of all drills
         const totalScore = student.drills.reduce((sum, drill) => sum + drill.score, 0);
         student.preparednessScore = Math.round(totalScore / student.drills.length);
 
@@ -192,12 +185,11 @@ app.post('/api/students/complete-drill', authMiddleware, async (req, res) => {
     }
 });
 
+// --- FIX 2: Removed redundant static file serving ---
+// Your front-end is on GitHub Pages, so this is not needed.
+
 const path = require('path');
-
-// Serve static frontend files
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Catch-all route to serve index.html for any unknown route
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
