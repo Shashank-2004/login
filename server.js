@@ -10,26 +10,24 @@ const User = require('./models/User');
 const { authMiddleware, requireAdmin } = require('./middleware/auth');
 
 const app = express();
+
 app.use(cors({
-    origin: ['https://yourfrontenddomain.com'], // replace with frontend domain
+    origin: 'https://shashank-2004.github.io',
     credentials: true
 }));
+
 app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
-const SECRET_KEY = process.env.SECRET_KEY || 'SECRET123';
+const SECRET_KEY = process.env.SECRET_KEY || 'KiphT3fMKYK174IR';
 
 if (!MONGO_URI) {
     console.error('MONGO_URI not set. Set it in .env or environment.');
     process.exit(1);
 }
 
-// Connect to MongoDB Atlas
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
+mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log('MongoDB connected'))
 .catch(err => console.log(err));
 
@@ -37,36 +35,36 @@ mongoose.connect(process.env.MONGO_URI, {
  * POST /api/register
  * Body: { name, email, password, role, schoolId }
  */
-app.post('/api/register', async (req, res) => {
-    try {
-        const { name, email, password, role, schoolId } = req.body;
-        if (!email || !password || !role) return res.status(400).json({ message: 'Missing required fields' });
+app.post('/api/students/complete-drill', authMiddleware, async (req, res) => {
+  const { drillName, score } = req.body;
+  if (!drillName || typeof score !== 'number') {
+    return res.status(400).json({ message: 'drillName and score are required' });
+  }
 
-        if (role === 'student' && !schoolId) {
-            return res.status(400).json({ message: 'Students must provide schoolId' });
-        }
-        if (role === 'admin' && !schoolId) {
-            return res.status(400).json({ message: 'Admin must provide schoolId' });
-        }
+  const student = await User.findById(req.user.id);
+  if (!student) return res.status(404).json({ message: 'Student not found' });
 
-        const existing = await User.findOne({ email });
-        if (existing) return res.status(400).json({ message: 'User already exists with this email' });
+  if (!student.drills) student.drills = [];
 
-        if (role === 'admin') {
-            const existingAdmin = await User.findOne({ role: 'admin', schoolId });
-            if (existingAdmin) {
-                return res.status(400).json({ message: 'An admin account for this school already exists' });
-            }
-        }
+  const existingDrill = student.drills.find(d => d.drillName === drillName);
+  if (existingDrill) {
+    existingDrill.score = score;
+  } else {
+    student.drills.push({ drillName, score });
+  }
 
-        const hashed = await bcrypt.hash(password, 10);
-        const user = new User({ name, email, password: hashed, role, schoolId });
-        await user.save();
-        return res.json({ message: 'Registration successful' });
-    } catch (err) {
-        console.error(err);
-        return res.status(500).json({ message: 'Server error' });
-    }
+  student.drillsCompleted = student.drills.length;
+  const totalScore = student.drills.reduce((sum, d) => sum + d.score, 0);
+  student.preparednessScore = Math.round(totalScore / student.drills.length);
+
+  await student.save();
+
+  res.json({
+    message: 'Drill completion recorded successfully',
+    drillsCompleted: student.drillsCompleted,
+    preparednessScore: student.preparednessScore,
+    completedDrills: student.drills.map(d => d.drillName)
+  });
 });
 
 /**
@@ -96,13 +94,28 @@ app.post('/api/login', async (req, res) => {
 /**
  * GET /api/me
  * Authenticated route that returns current user (without password)
+ * ✅ NOW INCLUDES completedDrills ARRAY
  */
 app.get('/api/me', authMiddleware, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('-password');
         if (!user) return res.status(404).json({ message: 'User not found' });
-        res.json(user);
+
+        // ✅ Extract completed drill names
+        const completedDrills = (user.drills || []).map(d => d.drillName);
+
+        res.json({
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            schoolId: user.schoolId,
+            preparednessScore: user.preparednessScore || 0,
+            drillsCompleted: user.drillsCompleted || 0,
+            completedDrills: completedDrills  // ✅ Added this
+        });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -150,45 +163,65 @@ app.post('/api/students/update', authMiddleware, async (req, res) => {
  * POST /api/students/complete-drill
  * Protected: increments the user's drillsCompleted count and updates their score for a specific drill.
  * Body: { drillName, score }
+ * ✅ IMPROVED: Better handling of drill completion
  */
 app.post('/api/students/complete-drill', authMiddleware, async (req, res) => {
     try {
         const userId = req.user.id;
         const { drillName, score } = req.body;
-        const student = await User.findById(userId);
 
+        // ✅ Validate input
+        if (!drillName || typeof score !== 'number') {
+            return res.status(400).json({ message: 'drillName and score are required' });
+        }
+
+        const student = await User.findById(userId);
         if (!student) {
             return res.status(404).json({ message: 'Student not found' });
         }
         
-        // Ensure the drills array exists
+        // ✅ Initialize drills array if it doesn't exist
         if (!student.drills) {
             student.drills = [];
         }
 
-        // Find and update the score for the specific drill
+        // ✅ Check if drill already completed
         const existingDrillIndex = student.drills.findIndex(d => d.drillName === drillName);
+        
         if (existingDrillIndex > -1) {
             // Update existing drill score
             student.drills[existingDrillIndex].score = score;
         } else {
-            // Add new drill completion
+            // Add new drill
             student.drills.push({ drillName, score });
         }
         
-        // Increment total drills completed
+        // ✅ Update drillsCompleted count
         student.drillsCompleted = student.drills.length;
         
-        // Recalculate preparednessScore based on average of all drills
+        // ✅ Calculate average preparedness score from all completed drills
         const totalScore = student.drills.reduce((sum, drill) => sum + drill.score, 0);
-        student.preparednessScore = Math.round(totalScore / student.drills.length);
+        const averageScore = Math.round(totalScore / student.drills.length);
+        student.preparednessScore = averageScore;
 
         await student.save();
-        res.json({ message: 'Drill completion and score recorded', user: student });
+        
+        res.json({ 
+            message: 'Drill completion recorded successfully',
+            drillsCompleted: student.drillsCompleted,
+            preparednessScore: student.preparednessScore,
+            completedDrills: student.drills.map(d => d.drillName)
+        });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
+});
+
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'public')));
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

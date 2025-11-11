@@ -127,12 +127,14 @@
     </section>
 
     <!-- Learn More -->
-    <section id="learn">
-      <h2>Learn More</h2>
-      <p>Watch this earthquake drill training video to understand safety procedures.</p>
-      <button class="btn-primary" onclick="openModal('videoModal')">📺 Watch Video Guide</button>
-      <a href="earthquakequiz.html" class="btn-link btn-secondary">❓ Take Quiz Game</a>
-    </section>
+    <!-- Learn More -->
+<section id="learn">
+  <h2>Learn More</h2>
+  <p>Watch this earthquake drill training video to understand safety procedures.</p>
+  <button class="btn-primary" onclick="openModal('videoModal')">📺 Watch Video Guide</button>
+  <a href="earthquakeQUIZ.html" class="btn-link btn-secondary">❓ Take Quiz Game</a>
+</section>
+
   </main>
 
   <!-- Footer -->
@@ -189,41 +191,26 @@
   }
 
   try {
-    // 1️⃣ Mark Earthquake Drill completed (backend should increment drill count)
-    const drillRes = await fetch('http://127.0.0.1:5000/api/students/complete-drill', {
+    const response = await fetch('https://login-relt.onrender.com/api/students/complete-drill', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ drillId: 2 }) // Earthquake Drill
+      body: JSON.stringify({ 
+        drillName: "Earthquake Drill",  // ✅ Backend expects drillName, not drillId
+        score: scorePercentage           // ✅ Must be a number (percentage)
+      })
     });
 
-    if (!drillRes.ok) {
-      const data = await drillRes.json();
-      alert(`Failed to record drill completion: ${data.message}`);
+    if (!response.ok) {
+      const data = await response.json();
+      alert(`Failed to save drill: ${data.message}`);
       return;
     }
 
-    // 2️⃣ Update preparedness score
-    const scoreRes = await fetch('http://127.0.0.1:5000/api/students/update', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ preparednessScore: scorePercentage })
-    });
-
-    if (!scoreRes.ok) {
-      const data = await scoreRes.json();
-      alert(`Failed to update preparedness score: ${data.message}`);
-      return;
-    }
-
-    alert('✅ Earthquake Drill completed and score recorded!');
+    alert('✅ Earthquake Drill completed and recorded!');
     window.location.href = 'student-dashboard.html';
-
   } catch (error) {
     console.error('Error saving drill:', error);
     alert('An error occurred while saving your progress.');

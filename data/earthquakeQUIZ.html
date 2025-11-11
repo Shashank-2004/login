@@ -146,7 +146,7 @@
       loadQuestion();
     }
 
-    async function completeQuiz(finalScore) {
+   async function completeQuiz(finalScore) {
   const token = localStorage.getItem('token');
   if (!token) {
     alert('You must be logged in to save your quiz results.');
@@ -154,48 +154,40 @@
     return;
   }
 
+  // ✅ Convert score to percentage
+  const totalQuestions = questions.length;
+  const scorePercentage = Math.round((finalScore / totalQuestions) * 100);
+
   try {
-    const preparednessScore = Math.floor((finalScore / questions.length) * 100);
-
-    // ✅ Mark Earthquake Drill completed (increments drill count automatically)
-    const drillRes = await fetch('http://localhost:5000/api/students/complete-drill', {
+    const response = await fetch('https://login-relt.onrender.com/api/students/complete-drill', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ drillId: 2 }) // Earthquake Drill
+      body: JSON.stringify({ 
+        drillName: "Earthquake Drill",  // ✅ Matches dashboard and backend
+        score: scorePercentage           // ✅ Send percentage instead of raw score
+      })
     });
 
-    if (!drillRes.ok) {
-      const data = await drillRes.json();
-      alert(`Failed to record drill completion: ${data.message}`);
-      return;
+    if (!response.ok) {
+      const errData = await response.json();
+      console.error('Server error:', errData);
+      let errorMessage = 'Failed to update progress. Please try again.';
+      if (response.status === 401) {
+        errorMessage = 'Authentication failed. Please log in again to save your progress.';
+      }
+      throw new Error(errorMessage);
     }
 
-    // ✅ Update preparedness score
-    const res = await fetch('http://localhost:5000/api/students/update', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ preparednessScore })
-    });
-
-    if (res.ok) {
-      window.location.href = 'student-dashboard.html';
-    } else {
-      const data = await res.json();
-      alert(`Failed to update score: ${data.message || 'Unknown error'}`);
-    }
-
-  } catch (error) {
-    console.error('Error completing quiz:', error);
-    alert('An error occurred while saving your progress.');
+    alert(`✅ Quiz completed! Your score: ${scorePercentage}%`);
+    window.location.href = 'student-dashboard.html';
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
   }
 }
-
     loadQuestion();
   </script>
 </body>

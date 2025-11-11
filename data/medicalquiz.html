@@ -186,18 +186,21 @@ nextBtn.addEventListener("click", () => {
 });
 
 // Async function to update backend
-async function updateProgress(drillName, score) {
+async function updateProgress(drillName, scorePercentage) {
     try {
         const token = localStorage.getItem('token');
         if (!token) throw new Error('No token found');
 
-        const response = await fetch('http://localhost:5000/api/students/complete-drill', {
+        const response = await fetch('https://login-relt.onrender.com/api/students/complete-drill', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ drillName: drillName, score: score })
+            body: JSON.stringify({ 
+                drillName: drillName,
+                score: scorePercentage 
+            })
         });
 
         if (!response.ok) {
@@ -208,7 +211,19 @@ async function updateProgress(drillName, score) {
             throw new Error(errorMessage);
         }
 
-        window.location.href = 'student-dashboard.html';
+        // Success message popup
+        const messageBox = document.createElement('div');
+        messageBox.className = 'message-box';
+        messageBox.innerHTML = `
+            <p>✅ Medical Emergency Drill Completed!<br>Your score: ${scorePercentage}%</p>
+            <button onclick="window.location.href='student-dashboard.html'">Go to Dashboard</button>
+        `;
+        document.body.appendChild(messageBox);
+
+        setTimeout(() => {
+            window.location.href = 'student-dashboard.html';
+        }, 2000);
+
     } catch (err) {
         console.error(err);
         showMessageBox(err.message);
@@ -221,9 +236,11 @@ function endGame() {
     progressBar.style.width = "100%";
     finalScore.textContent = `Your final score is ${score} out of ${questions.length}`;
 
-    // Call backend to update MongoDB
-    updateProgress("Medical Drill", score);
+    // ✅ Send correct drill name and percentage to backend
+    const percentage = Math.round((score / questions.length) * 100);
+    updateProgress("Medical Emergency Drill", percentage);
 }
+
 
 document.getElementById("restart-btn").addEventListener("click", () => {
     score = 0;

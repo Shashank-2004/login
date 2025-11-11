@@ -161,7 +161,7 @@
 
     try {
       // Fetch the logged-in admin's details
-      const adminRes = await fetch('http://localhost:5000/api/me', {
+      const adminRes = await fetch('https://login-relt.onrender.com/api/me', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -172,7 +172,7 @@
       document.getElementById('adminName').textContent = admin.name.split(' ')[0];
 
       // Fetch the students for this admin's school
-      const studentsRes = await fetch('http://localhost:5000/api/admin/students', {
+      const studentsRes = await fetch('https://login-relt.onrender.com/api/admin/students', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -230,7 +230,7 @@
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     alert('Logged out!');
-    window.location.href = 'login.html';
+    window.location.href = 'index.html';
   }
 
   document.addEventListener('DOMContentLoaded', fetchAndRenderStudents);

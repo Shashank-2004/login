@@ -122,26 +122,53 @@
     </div>
 
     <div class="switch">
-      Already have an account? <a href="login.html">Login</a>
-    </div>
+  Already have an account? <a href="index.html">Login</a>
+</div>
   </div>
 
-<script>
-  document.getElementById("signupForm").addEventListener("submit", async (e) => {
+<<script>
+document.getElementById("signupForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-    const formData = Object.fromEntries(new FormData(e.target).entries());
-    const res = await fetch("http://localhost:5000/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData)
-    });
-    const data = await res.json();
-    alert(data.message);
-  });
 
-  function googleSignup() {
+    const formData = Object.fromEntries(new FormData(e.target).entries());
+
+    // Simple frontend validation
+    if (!formData.role) {
+        alert("Please select a role");
+        return;
+    }
+    if (!formData.schoolId) {
+        alert("Please enter School Code");
+        return;
+    }
+
+    try {
+        const res = await fetch("https://login-relt.onrender.com/api/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            // Backend returned error
+            alert(data.message || "Signup failed");
+            return;
+        }
+
+        alert("Signup successful! You can now login.");
+        window.location.href = "index.html"; // redirect to login
+    } catch (err) {
+        console.error("Signup error:", err);
+        alert("Could not connect to server. Try again later.");
+    }
+});
+
+function googleSignup() {
     alert("Google OAuth sign-up will be implemented here!");
-  }
+}
 </script>
+
 </body>
 </html>
